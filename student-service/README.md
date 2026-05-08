@@ -1,251 +1,105 @@
-# Hexagonal Architecture in Java Tutorial
+## Arquitectura hexagonal - Aplicación de gestión de tareas
+Esta aplicación es un ejemplo de un sistema de gestión de tareas que sigue la arquitectura hexagonal. La aplicación permite crear, leer, actualizar y eliminar tareas, así como obtener información adicional de una tarea a través de una API externa.
 
-[![Build](https://github.com/SvenWoltmann/hexagonal-architecture-java/actions/workflows/build.yml/badge.svg)](https://github.com/SvenWoltmann/hexagonal-architecture-java/actions/workflows/build.yml)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SvenWoltmann_hexagonal-architecture-java&metric=coverage)](https://sonarcloud.io/dashboard?id=SvenWoltmann_hexagonal-architecture-java)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=SvenWoltmann_hexagonal-architecture-java&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=SvenWoltmann_hexagonal-architecture-java)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=SvenWoltmann_hexagonal-architecture-java&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=SvenWoltmann_hexagonal-architecture-java)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=SvenWoltmann_hexagonal-architecture-java&metric=security_rating)](https://sonarcloud.io/dashboard?id=SvenWoltmann_hexagonal-architecture-java)
+## Arquitectura hexagonal
+La arquitectura hexagonal, también conocida como Puertos y Adaptadores, es un patrón de diseño que busca mantener una separación clara de las responsabilidades en una aplicación, facilitando la adaptabilidad, escalabilidad y mantenibilidad del software. La arquitectura se organiza en tres capas principales:
 
-This repository contains a sample Java REST application implemented according to hexagonal architecture.
+**Dominio:** Esta capa contiene las entidades del dominio, que representan los conceptos clave del negocio y sus relaciones, así como la lógica de negocio asociada. Estas entidades son independientes de la infraestructura y la implementación, lo que permite centrarse en las reglas y restricciones del negocio.
 
-It is part of the HappyCoders tutorial series on Hexagonal Architecture:
-* [Part 1: Hexagonal Architecture - What Is It? Why Should You Use It?](https://www.happycoders.eu/software-craftsmanship/hexagonal-architecture/).
-* [Part 2: Hexagonal Architecture with Java - Tutorial](https://www.happycoders.eu/software-craftsmanship/hexagonal-architecture-java/).
-* [Part 3: Ports and Adapters Java Tutorial: Adding a Database Adapter](https://www.happycoders.eu/software-craftsmanship/ports-and-adapters-java-tutorial-db/).
-* [Part 4: Hexagonal Architecture with Quarkus - Tutorial](https://www.happycoders.eu/software-craftsmanship/hexagonal-architecture-quarkus/).
-* [Part 5: Hexagonal Architecture with Spring Boot - Tutorial](https://www.happycoders.eu/software-craftsmanship/hexagonal-architecture-spring-boot/).
+**Aplicación:** Esta capa contiene los casos de uso, que representan las acciones o funcionalidades que la aplicación puede realizar. Los casos de uso coordinan la comunicación entre los puertos de entrada (interfaces que representan las acciones que se pueden realizar desde el exterior) y los puertos de salida (interfaces que representan las acciones que la aplicación puede realizar hacia el exterior, como interactuar con bases de datos o servicios externos).
 
-# Branches
+**Infraestructura:** Esta capa contiene los adaptadores y la implementación de los puertos de salida, así como la configuración y la interacción con servicios externos. Los adaptadores son responsables de convertir las solicitudes externas en llamadas a los casos de uso y de convertir las respuestas de los casos de uso en respuestas comprensibles para los sistemas externos.
 
-## `main`
+## La arquitectura hexagonal se adhiere a los principios SOLID:
 
-In the `main` branch, you'll find the application implemented without an application framework. It's only using:
-* [RESTEasy](https://resteasy.dev/) (implementing [Jakarta RESTful Web Services](https://jakarta.ee/specifications/restful-ws/)),
-* [Hibernate](https://hibernate.org/) (implementing [Jakarta Persistence API](https://jakarta.ee/specifications/persistence/)), and
-* [Undertow](https://undertow.io/) as a lightweight web server.
+**Principio de Responsabilidad Única (SRP)**: Cada capa tiene una responsabilidad única y bien definida, evitando la mezcla de responsabilidades y facilitando el mantenimiento del código.
 
-## `without-jpa-adapters`
+**Principio de Abierto/Cerrado (OCP)**: Las entidades y los casos de uso están abiertos a la extensión pero cerrados a la modificación. Si se necesita agregar una nueva funcionalidad, se puede hacer extendiendo los casos de uso o creando nuevos adaptadores sin modificar el código existente.
 
-In the `without-jpa-adapters` branch, you'll find the application implemented without an application framework and without JPA adapters. It's only using RESTEasy and Undertow.
+**Principio de Sustitución de Liskov (LSP)**: Los adaptadores y las implementaciones de los puertos deben ser sustituibles sin afectar el comportamiento del sistema, lo que permite cambiar fácilmente entre diferentes implementaciones de infraestructura o servicios externos.
 
-## `with-quarkus`
+**Principio de Segregación de Interfaces (ISP)**: Los puertos de entrada y salida definen interfaces pequeñas y específicas para cada funcionalidad, lo que facilita la implementación de adaptadores y evita depender de interfaces innecesariamente grandes.
 
-In the `with-quarkus` branch, you'll find an implementation using [Quarkus](https://quarkus.io/) as application framework.
+**Principio de Inversión de Dependencias (DIP)**: Las dependencias entre las capas se invierten mediante la inyección de dependencias, permitiendo que las capas de dominio y aplicación dependan de abstracciones en lugar de implementaciones concretas.
 
-## `with-spring`
+## Rutas de la API
+A continuación se enumeran las rutas de la API con sus métodos HTTP correspondientes y ejemplos de entrada:
 
-In the `with-quarkus` branch, you'll find an implementation using [Spring](https://spring.io/) as application framework.
-
-# Architecture Overview
-
-The source code is separated into four modules:
-* `model` - contains the domain model
-* `application` - contains the domain services and the ports of the hexagon
-* `adapters` - contains the REST, in-memory and JPA adapters
-* `boostrap` - contains the configuration and bootstrapping logic
-
-The following diagram shows the hexagonal architecture of the application along with the source code modules:
-
-![Hexagonal Architecture Modules](doc/hexagonal-architecture-modules.png)
-
-The `model` module is not represented as a hexagon because it is not defined by the Hexagonal Architecture. Hexagonal Architecture leaves open what happens inside the application hexagon. 
-
-# How to Run the Application
-
-The easiest way to run the application is to start the `main` method of the `Launcher` class (you'll find it in the `boostrap` module) from your IDE.
-
-You can use one of the following VM options to select a persistence mechanism:
-
-* `-Dpersistence=inmemory` to select the in-memory persistence option (default)
-* `-Dpersistence=mysql` to select the MySQL option
-
-If you selected the MySQL option, you will need a running MySQL database. The easiest way to start one is to use the following Docker command:
-
-```shell
-docker run --name hexagon-mysql -d -p3306:3306 \
-    -e MYSQL_DATABASE=shop -e MYSQL_ROOT_PASSWORD=test mysql:8.1
-```
-
-The connection parameters for the database are hardcoded in `RestEasyUndertowShopApplication.initMySqlAdapter()`. If you are using the Docker container as described above, you can leave the connection parameters as they are. Otherwise, you may need to adjust them.
-
-
-# Example Curl Commands
-
-The following `curl` commands assume that you have installed `jq`, a tool for pretty-printing JSON strings.
-
-## Find Products
-
-The following queries return one and two results, respectively:
-
-```shell
-curl localhost:8080/products/?query=plastic | jq
-curl localhost:8080/products/?query=monitor | jq
-```
-
-The response of the second query looks like this:
-```json
-[
-  {
-    "id": "K3SR7PBX",
-    "name": "27-Inch Curved Computer Monitor",
-    "price": {
-      "currency": "EUR",
-      "amount": 159.99
-    },
-    "itemsInStock": 24081
-  },
-  {
-    "id": "Q3W43CNC",
-    "name": "Dual Monitor Desk Mount",
-    "price": {
-      "currency": "EUR",
-      "amount": 119.9
-    },
-    "itemsInStock": 1079
-  }
-]
-```
-
-## Get a Cart
-
-To show the cart of user 61157 (this cart is empty when you begin):
-
-```shell
-curl localhost:8080/carts/61157 | jq
-```
-
-The response should look like this:
-
-```json
+Crear una tarea
+**Método: POST**
+Ruta: /api/tasks
+Input: JSON con la información de la tarea (title, description y completed)
+json
+Copy code
 {
-  "lineItems": [],
-  "numberOfItems": 0,
-  "subTotal": null
+   "title": "Ejemplo de título",
+   "description": "Ejemplo de descripción",
+   "completed": false
 }
-```
+Obtener una tarea por ID
 
-## Adding Products to a Cart
+**Método: GET**
+Ruta: /api/tasks/{taskId}
+Input: taskId en la ruta (reemplazar {taskId} con el ID de la tarea que deseas obtener)
+Obtener todas las tareas
 
-Each of the following commands adds a product to the cart and returns the contents of the cart after the product is added (note that on Windows, you have to replace the single quotes with double quotes):
+**Método: GET**
+Ruta: /api/tasks
+Actualizar una tarea
 
-```shell
-curl -X POST 'localhost:8080/carts/61157/line-items?productId=TTKQ8NJZ&quantity=20' | jq
-curl -X POST 'localhost:8080/carts/61157/line-items?productId=K3SR7PBX&quantity=2' | jq
-curl -X POST 'localhost:8080/carts/61157/line-items?productId=Q3W43CNC&quantity=1' | jq
-curl -X POST 'localhost:8080/carts/61157/line-items?productId=WM3BPG3E&quantity=3' | jq
-```
-
-After executing two of the four commands, you can see that the cart contains the two products. You also see the total number of items and the sub-total:
-
-```json
+**Método: PUT**
+Ruta: /api/tasks/{taskId}
+Input: taskId en la ruta (reemplazar {taskId} con el ID de la tarea que deseas actualizar) y JSON con la información actualizada de la tarea (title, description y completed)
+json
+Copy code
 {
-  "lineItems": [
-    {
-      "productId": "TTKQ8NJZ",
-      "productName": "Plastic Sheeting",
-      "price": {
-        "currency": "EUR",
-        "amount": 42.99
-      },
-      "quantity": 20
-    },
-    {
-      "productId": "K3SR7PBX",
-      "productName": "27-Inch Curved Computer Monitor",
-      "price": {
-        "currency": "EUR",
-        "amount": 159.99
-      },
-      "quantity": 2
-    }
-  ],
-  "numberOfItems": 22,
-  "subTotal": {
-    "currency": "EUR",
-    "amount": 1179.78
-  }
+   "title": "Nuevo título",
+   "description": "Nueva descripción",
+   "completed": true
 }
-```
+Eliminar una tarea por ID
 
-This will increase the number of plastic sheetings to 40:
-```shell
-curl -X POST 'localhost:8080/carts/61157/line-items?productId=TTKQ8NJZ&quantity=20' | jq
-```
+**Método: DELETE**
+Ruta: /api/tasks/{taskId}
+Input: taskId en la ruta (reemplazar {taskId} con el ID de la tarea que deseas eliminar)
+Obtener información adicional de una tarea
 
-### Producing an Error Message
+**Método: GET**
+Ruta: /api/tasks/{taskId}/additional-info
+Input: taskId en la ruta (reemplazar {taskId} con el ID de la tarea para la que deseas obtener información adicional)
+Pruebas
+Puedes utilizar herramientas como Postman o cURL para probar estas rutas. Asegúrate de que la aplicación esté en ejecución antes de realizar las pruebas.
 
-Trying to add another 20 plastic sheetings will result in error message saying that there are only 55 items in stock:
+**Entidades del dominio**
+Dentro de la capa de dominio, se definen las entidades del negocio que representan los conceptos clave de la aplicación. En el contexto de esta aplicación de gestión de tareas, podríamos tener la siguiente entidad:
 
-```shell
-curl -X POST 'localhost:8080/carts/61157/line-items?productId=TTKQ8NJZ&quantity=20' | jq
-```
+**Tarea:** Representa una tarea con sus atributos como el título, descripción y estado de completitud.
+python
+Copy code
+class Task:
+    def __init__(self, title, description, completed):
+        self.title = title
+        self.description = description
+        self.completed = completed
+**Casos de uso**
+Los casos de uso definen las acciones o funcionalidades que la aplicación puede realizar. Estos casos de uso se encuentran en la capa de aplicación y se comunican con los puertos de entrada y salida. Aquí hay algunos ejemplos de casos de uso para la aplicación de gestión de tareas:
 
-This is how the error response looks like:
-```json
-{
-  "httpStatus": 400,
-  "errorMessage": "Only 55 items in stock"
-}
-```
+**Crear tarea:** Permite crear una nueva tarea en el sistema.
+Obtener tarea por ID: Recupera una tarea específica basada en su ID.
+Obtener todas las tareas: Obtiene una lista de todas las tareas registradas en el sistema.
+Actualizar tarea: Actualiza los atributos de una tarea existente.
+Eliminar tarea: Elimina una tarea del sistema.
+Adaptadores de puertos de entrada
+Los adaptadores de puertos de entrada se encargan de recibir las solicitudes externas y dirigirlas hacia los casos de uso correspondientes. En el contexto de la aplicación de gestión de tareas, los adaptadores de puertos de entrada podrían ser implementados como controladores de una API REST.
 
-## Emptying the Cart
+## Adaptadores de puertos de salida
+Los adaptadores de puertos de salida se encargan de interactuar con la infraestructura externa, como bases de datos o servicios externos, en nombre de los casos de uso. En el caso de la aplicación de gestión de tareas, los adaptadores de puertos de salida podrían ser responsables de almacenar y recuperar las tareas en una base de datos.
 
-To empty the cart, send a DELETE command to its URL:
+## Servicios externos
+La aplicación de gestión de tareas también puede interactuar con servicios externos para obtener información adicional sobre las tareas. Por ejemplo, podría conectarse a un servicio de clima para obtener la información meteorológica asociada a una tarea.
 
-```shell
-curl -X DELETE localhost:8080/carts/61157
-```
+## Pruebas de integración
+Es importante realizar pruebas de integración para asegurar el correcto funcionamiento de la aplicación en su conjunto. Estas pruebas verifican que los diferentes componentes de la arquitectura hexagonal interactúen correctamente entre sí y con los servicios externos. Se pueden utilizar herramientas de pruebas como pytest para implementar pruebas de integración.
 
-To verify it's empty:
-```shell
-curl localhost:8080/carts/61157 | jq
-```
-
-You'll see an empty cart again.
-
-## <br>Additional Resources
-
-### <br>Java Versions PDF Cheat Sheet
-
-**Stay up-to-date** with the latest Java features with [this PDF Cheat Sheet](https://www.happycoders.eu/java-versions/)!
-
-[<img src="/img/Java_Versions_PDF_Cheat_Sheet_Mockup_936.png" alt="Java Versions PDF Cheat Sheet Mockup" style="width: 468px; max-width: 100%;">](https://www.happycoders.eu/java-versions/)
-
-* Avoid lengthy research with this **concise overview of all Java versions up to Java 23**.
-* **Discover the innovative features** of each new Java version, summarized on a single page.
-* **Impress your team** with your up-to-date knowledge of the latest Java version.
-
-👉 [Download the Java Versions PDF](https://www.happycoders.eu/java-versions/)<br>
-
-_(Hier geht's zur deutschen Version &rarr; [Java-Versionen PDF](https://www.happycoders.eu/de/java-versionen/))_
-
-
-### <br>The Big O Cheat Sheet
-
-With this [1-page PDF cheat sheet](https://www.happycoders.eu/big-o-cheat-sheet/), you'll always have the **7 most important complexity classes** at a glance.
-
-[<img src="/img/big-o-cheat-sheet-pdf-en-transp_936.png" alt="Big O PDF Cheat Sheet Mockup" style="width: 468px; max-width: 100%;">](https://www.happycoders.eu/big-o-cheat-sheet/)
-
-* **Always choose the most efficient data structures** and thus increase the performance of your applications.
-* **Be prepared for technical interviews** and confidently present your algorithm knowledge.
-* **Become a sought-after problem solver** and be known for systematically tackling complex problems.
-
-👉 [Download the Big O Cheat Sheet](https://www.happycoders.eu/big-o-cheat-sheet/)<br>
-
-_(Hier geht's zur deutschen Version &rarr; [O-Notation Cheat Sheet](https://www.happycoders.eu/de/o-notation-cheat-sheet/))_
-
-
-### <br>HappyCoders Newsletter
-👉 Want to level up your Java skills?
-Sign up for the [HappyCoders newsletter](http://www.happycoders.eu/newsletter/) and get regular tips on programming, algorithms, and data structures!
-
-_(Hier geht's zur deutschen Version &rarr; [HappyCoders-Newsletter deutsch](https://www.happycoders.eu/de/newsletter/))_
-
-
-### <br>🇩🇪 An alle Java-Programmierer, die durch fundierte Kenntnisse über Datenstrukturen besseren Code schreiben wollen
-
-Trage dich jetzt auf die [Warteliste](https://www.happycoders.eu/de/mastering-data-structures-warteliste/) von „Mastering Data Structures in Java“ ein, und erhalte das beste Angebot!
-
-[<img src="/img/mastering-data-structures-product-mockup-cropped-1600.png" alt="Mastering Data Structures Mockup" style="width: 640px; max-width: 100%;">](https://www.happycoders.eu/de/mastering-data-structures-warteliste/)
-
-👉 [Zur Warteliste](https://www.happycoders.eu/de/mastering-data-structures-warteliste/)
+## Conclusiones
+La arquitectura hexagonal proporciona un enfoque estructurado para el diseño de aplicaciones, fomentando la separación de responsabilidades y facilitando el mantenimiento y escalabilidad del software. Al seguir esta arquitectura, la aplicación de gestión de tareas logra una mayor modularidad, lo que permite realizar cambios y extensiones de manera más sencilla y sin afectar otras partes del sistema.
